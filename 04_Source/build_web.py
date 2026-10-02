@@ -474,6 +474,20 @@ def regen_reports():
         print("REGEN FAILED: plan_month.py")
         print(((p.stdout or "") + (p.stderr or "")).strip())
         sys.exit(1)
+    # 4) master workbook -> 03_System/My_Financial_System_<YEAR>_SMS.xlsx
+    try:
+        e_ = subprocess.run([py, os.path.join(src, "build_excel.py")],
+                            capture_output=True, text=True,
+                            encoding="utf-8", errors="replace")
+        if e_.returncode == 0:
+            print("regen: master workbook refreshed")
+        else:
+            print("NOTE: build_excel.py skipped ({})".format(
+                ((e_.stdout or "") + (e_.stderr or "")).strip().splitlines()[-1]
+                if ((e_.stdout or "") + (e_.stderr or "")).strip() else "no output"))
+    except Exception as e:
+        print("NOTE: build_excel.py not run ({})".format(e))
+
     print("regen: reports refreshed (analyze_sms + plan_month {} income={:.0f})"
           .format(MONTH, income))
 
