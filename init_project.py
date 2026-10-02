@@ -33,16 +33,18 @@ import json
 import os
 import shutil
 import subprocess
-import os as _os
 import sys
 
 # Arabic output must not crash a cp1252 Windows console
-_here = _os.path.dirname(_os.path.abspath(__file__))
-_sys.path.insert(0, _os.path.join(_here, "04_Source"))
-try:
-    import utf8out  # noqa: F401
-except Exception:
-    pass
+def _mf_utf8():
+    for _n in ("stdout", "stderr"):
+        _st = getattr(sys, _n, None)
+        if _st is not None:
+            try:
+                _st.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+_mf_utf8()
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
