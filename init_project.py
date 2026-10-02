@@ -108,6 +108,44 @@ def write_config(cfg):
     print("wrote 03_System/config.json")
 
 
+# ---------------------------------------------------------------- harden ACL
+def harden():
+    """Create the remaining project folders, then lock the tree down to the
+    current Windows account only (NTFS). Best-effort: needs Windows + icacls."""
+    for d in ("01_Data", "02_Reports", "03_System", "04_Source", "05_Docs",
+              "06_Web"):
+        os.makedirs(os.path.join(BASE, d), exist_ok=True)
+
+    if not sys.platform.startswith("win"):
+        print("NOTE: NTFS lockdown skipped (not Windows) - the tree is still "
+              "entirely local.")
+        return False
+
+    owner = os.environ.get("USERNAME") or os.environ.get("USER") or ""
+    if not owner:
+        print("NOTE: could not detect your Windows account - ACL not applied.")
+        return False
+
+    acct = "TL\\" + owner if not owner.startswith("TL\\") else owner
+    icacls = shutil.which("icacls")
+    if not icacls:
+        print("NOTE: icacls not found - ACL not applied.")
+        return False
+
+    targets = ["01_Data", "02_Reports", "03_System", "05_Docs", "06_Web"]
+    for t in targets:
+        p = os.path.join(BASE, t)
+        try:
+            subprocess.run(
+                [icacls, p, "/inheritance:r", "/grant:r", "{}:(OI)(CI)F".format(acct),
+                 "/remove", "*S-1-1-0", "*S-1-5-11", "*S-1-5-32-545"],
+                capture_output=True, text=True, errors="replace")
+            print("locked {} ({} only)".format(t, acct))
+        except Exception as exc:
+            print("NOTE: could not lock {} ({})".format(t, exc))
+    return True
+
+
 # ---------------------------------------------------------------- sample SMS
 def write_sample_sms():
     """NBE-style sample that matches analyze_sms.py regexes exactly and
@@ -309,6 +347,9 @@ def main():
                   "set a real one before publishing.")
 
     write_config(cfg)
+
+    print("\n=== lockdown (NTFS: your Windows account only)")
+    harden()
 
     if cfg["passcode"] in ("", "change-me") and not args.no_repo:
         print("HOLD: refusing to publish with a placeholder passcode.")

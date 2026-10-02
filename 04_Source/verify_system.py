@@ -77,12 +77,16 @@ FIXED = [
 ]
 PATTERNS = [
     ("01_Data", "sms_raw_*.txt", "raw SMS capture"),
-    ("01_Data", "daily_log_*.csv", "daily log"),
     ("02_Reports", "transactions_*.csv", "all transactions"),
     ("02_Reports", "Financial_Analysis_*.xlsx", "full analysis workbook"),
     ("02_Reports", "summary_*.json", "summary json"),
     ("02_Reports", "plan_*.xlsx", "month plan"),
     ("03_System", "My_Financial_System*.xlsx", "master workbook"),
+]
+# created only when the matching tool is used, so absence is not a failure
+OPTIONAL = [
+    ("01_Data", "daily_log_*.csv", "daily log (run daily_status.py)"),
+    ("05_Docs", "*.docx", "Word guide (run build_word.py)"),
 ]
 for _folder, _fn in FIXED:
     _p = os.path.join(BASE, _folder, _fn)
@@ -93,6 +97,11 @@ for _folder, _pat, _label in PATTERNS:
              if os.path.getsize(f) > 0]
     check("file " + _folder + "/" + _pat + " (" + _label + ")", bool(_hits),
           "no non-empty match")
+for _folder, _pat, _label in OPTIONAL:
+    _hits = [f for f in _glob.glob(os.path.join(BASE, _folder, _pat))
+             if os.path.getsize(f) > 0]
+    check("optional " + _folder + "/" + _pat + " (" + _label + ")", True,
+          ("found " + str(len(_hits))) if _hits else "not generated yet")
 
 # 3. data chain
 summary_path = os.path.join(BASE, "02_Reports", "summary_{}.json".format(YEAR))
