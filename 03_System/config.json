@@ -1,0 +1,10 @@
+{
+  "name": "MyFinance",
+  "passcode": "change-me",
+  "income": 0,
+  "currency": "EGP",
+  "city": "Cairo",
+  "github_owner": "",
+  "github_repo": "",
+  "weekly_cap_fallback": 0
+}

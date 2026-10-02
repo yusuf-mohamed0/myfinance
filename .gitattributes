@@ -1,0 +1,10 @@
+# keep line endings stable across platforms so the source_manifest
+# SHA-256 lock behaves identically on Windows, macOS and Linux
+* text=auto
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.txt text eol=lf
+*.html text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf

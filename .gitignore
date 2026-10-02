@@ -1,0 +1,24 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+Thumbs.db
+
+# generated runtime data (each user produces their own)
+01_Data/*
+!01_Data/.gitkeep
+02_Reports/*
+!02_Reports/market_watch.json
+02_Reports/charts/
+03_System/*
+!03_System/config.json
+!03_System/source_manifest.json
+03_System/.manifest_key
+03_System/.manifest_key.pub
+03_System/sync_data.json
+05_Docs/
+*.docx
+*.xlsx
+06_Web/*
+!06_Web/.gitkeep
