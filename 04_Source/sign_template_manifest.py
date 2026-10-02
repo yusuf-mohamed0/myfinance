@@ -92,6 +92,18 @@ def sign(key, payload_b64):
     return base64.b64encode(sig).decode("ascii")
 
 
+
+# Arabic output must not crash a cp1252 Windows console
+def _mf_utf8():
+    import sys as _s
+    for _n in ("stdout", "stderr"):
+        _st = getattr(_s, _n, None)
+        if _st is not None:
+            try:
+                _st.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+_mf_utf8()
 def main():
     key = ensure_key()
     if key is None:

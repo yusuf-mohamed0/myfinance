@@ -8,6 +8,18 @@ from openpyxl.utils import get_column_letter
 from openpyxl.formatting.rule import CellIsRule, DataBarRule
 from openpyxl.worksheet.datavalidation import DataValidation
 
+# Arabic output must not crash a cp1252 Windows console
+def _mf_utf8():
+    import sys as _s
+    for _n in ("stdout", "stderr"):
+        _st = getattr(_s, _n, None)
+        if _st is not None:
+            try:
+                _st.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+_mf_utf8()
+
 _BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(_BASE, "03_System", "My_Financial_System.xlsx")
 

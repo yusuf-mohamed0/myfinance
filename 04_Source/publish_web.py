@@ -31,6 +31,18 @@ def run(cmd, cwd=WEB, ok_codes=(0,)):
     return p.returncode, (p.stdout or "") + (p.stderr or "")
 
 
+
+# Arabic output must not crash a cp1252 Windows console
+def _mf_utf8():
+    import sys as _s
+    for _n in ("stdout", "stderr"):
+        _st = getattr(_s, _n, None)
+        if _st is not None:
+            try:
+                _st.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+_mf_utf8()
 def main():
     # 1. rebuild site
     rc, out = run([sys.executable, os.path.join(BASE, "04_Source", "build_web.py"), MONTH])

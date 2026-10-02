@@ -22,6 +22,18 @@ except Exception:
 # scripts live in MyFinance\04_Source -> project root is one level up
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 from mfconfig import YEAR  # noqa: E402
+
+# Arabic output must not crash a cp1252 Windows console
+def _mf_utf8():
+    import sys as _s
+    for _n in ("stdout", "stderr"):
+        _st = getattr(_s, _n, None)
+        if _st is not None:
+            try:
+                _st.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+_mf_utf8()
 def _newest_raw():
     """pick the most recent sms_raw_*.txt from 01_Data (sorted: newest last)"""
     import glob as _g

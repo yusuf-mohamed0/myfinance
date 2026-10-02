@@ -153,6 +153,18 @@ def lan_ip():
         s.close()
 
 
+
+# Arabic output must not crash a cp1252 Windows console
+def _mf_utf8():
+    import sys as _s
+    for _n in ("stdout", "stderr"):
+        _st = getattr(_s, _n, None)
+        if _st is not None:
+            try:
+                _st.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+_mf_utf8()
 def main():
     ip = lan_ip()
     print("MyFinance local sync server")

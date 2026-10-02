@@ -50,6 +50,18 @@ for d in ["01_Data", "02_Reports", "03_System", "04_Source", "05_Docs", "06_Web"
 #    glob so the check works for any user and any reporting period.
 import glob as _glob
 
+# Arabic output must not crash a cp1252 Windows console
+def _mf_utf8():
+    import sys as _s
+    for _n in ("stdout", "stderr"):
+        _st = getattr(_s, _n, None)
+        if _st is not None:
+            try:
+                _st.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+_mf_utf8()
+
 FIXED = [
     ("04_Source", "mfconfig.py"),
     ("04_Source", "analyze_sms.py"),

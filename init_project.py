@@ -33,7 +33,16 @@ import json
 import os
 import shutil
 import subprocess
+import os as _os
 import sys
+
+# Arabic output must not crash a cp1252 Windows console
+_here = _os.path.dirname(_os.path.abspath(__file__))
+_sys.path.insert(0, _os.path.join(_here, "04_Source"))
+try:
+    import utf8out  # noqa: F401
+except Exception:
+    pass
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -215,7 +224,7 @@ def main():
     ap.add_argument("--city", default="", help="city for the market section")
     ap.add_argument("--currency", default="", help="currency label (e.g. 'EGP')")
     ap.add_argument("--owner", default="", help="GitHub username")
-    ap.add_argument("--repo", default="myfinance", help="GitHub repo name")
+    ap.add_argument("--repo", default="myfinance", help="GitHub repo name to create")
     ap.add_argument("--no-repo", action="store_true",
                     help="skip all GitHub steps (everything stays local)")
     ap.add_argument("--skip-build", action="store_true",
@@ -256,13 +265,21 @@ def main():
         if not cfg["currency"]:
             cfg["currency"] = ask("Currency label", "EGP")
         if not args.no_repo:
+            # default the owner to the detected gh login ONLY if the user agrees;
+            # otherwise empty (local-only) so we never assume someone's account
             if not cfg["github_owner"]:
-                cfg["github_owner"] = ask("GitHub username", detected)
-            cfg["github_repo"] = ask("GitHub repo name", args.repo or "myfinance")
-            if cfg["github_owner"]:
+                cfg["github_owner"] = ask("GitHub username (blank = local only)",
+                                         detected or "")
+            repo_default = args.repo or "myfinance"
+            cfg["github_repo"] = ask("GitHub repo name (blank = skip GitHub)",
+                                     repo_default)
+            if not cfg["github_repo"]:
+                cfg["github_owner"] = ""
+            else:
                 create = yn("Create/push the repo + enable Pages now", True)
                 if not create:
                     cfg["github_repo"] = ""
+                    cfg["github_owner"] = ""
     else:
         # batch mode: fill sensible defaults, never prompt
         if not cfg["name"]:
@@ -276,9 +293,14 @@ def main():
         if not cfg["currency"]:
             cfg["currency"] = "EGP"
         if not cfg["github_owner"]:
-            cfg["github_owner"] = detected
-        if not cfg["github_owner"] and not args.no_repo:
+            cfg["github_owner"] = detected or ""
+        if args.no_repo:
+            cfg["github_owner"] = ""
+        if not cfg["github_owner"]:
             # cannot push without an owner - stay local, tell the user later
+            cfg["github_repo"] = ""
+        elif not cfg["github_repo"]:
+            # owner known but no repo requested - stay local by default
             cfg["github_repo"] = ""
         if cfg["passcode"] == "change-me":
             print("WARN: no --passcode given, using placeholder 'change-me' - "
