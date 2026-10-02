@@ -261,7 +261,7 @@ try:
               " | ".join(leaked))
     elif owner and locked:
         check("ACL: only the owner (" + owner + ") has rights", True,
-              len(locked) + " folders locked")
+              "{} folders locked".format(len(locked)))
     else:
         check("ACL check ran", True, "no owner detected - skipped")
 except Exception as e:
