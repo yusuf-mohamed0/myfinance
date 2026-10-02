@@ -234,17 +234,36 @@ try:
 except Exception as e:
     check("plan-market link check ran", False, str(e))
 
-# 8. ACL lockdown
+# 8. ACL lockdown - the data folders (not the repo root) are what init locks
 try:
-    out = subprocess.run(["icacls", BASE], capture_output=True, text=True,
-                         encoding="utf-8", errors="replace").stdout
-    lines = [l.strip() for l in out.splitlines()
-             if "(F)" in l or "(M)" in l or "(RX)" in l]
     owner = os.environ.get("USERNAME") or os.environ.get("USER") or ""
-    only_owner = (not owner) or all(owner.lower() in l.lower() for l in lines)
-    only_owner = only_owner and len(lines) >= 1
-    check("ACL: only the owner (" + owner + ") has rights", only_owner,
-          repr(lines))
+    locked, leaked = [], []
+    for t in ("01_Data", "02_Reports", "03_System", "05_Docs", "06_Web"):
+        tp = os.path.join(BASE, t)
+        if not os.path.isdir(tp):
+            continue
+        out = subprocess.run(["icacls", tp], capture_output=True, text=True,
+                             encoding="utf-8", errors="replace").stdout
+        entries = [l.strip() for l in out.splitlines()
+                   if "(F)" in l or "(M)" in l or "(RX)" in l]
+        # the first token of each icacls line is the trustee
+        trustees = [e.split()[0] for e in entries if e.split()]
+        strangers = [t2 for t2 in trustees
+                     if (not owner or owner.lower() not in t2.lower())
+                     and not t2.upper().endswith(r"\SYSTEM")
+                     and not t2.upper().endswith(r"\ADMINISTRATORS")]
+        (leaked if strangers else locked).append(
+            t + (": " + ",".join(strangers) if strangers else ""))
+    if not sys.platform.startswith("win"):
+        check("ACL: Windows lockdown", True, "skipped (not Windows)")
+    elif owner and leaked:
+        check("ACL: only the owner (" + owner + ") has rights", False,
+              " | ".join(leaked))
+    elif owner and locked:
+        check("ACL: only the owner (" + owner + ") has rights", True,
+              len(locked) + " folders locked")
+    else:
+        check("ACL check ran", True, "no owner detected - skipped")
 except Exception as e:
     check("ACL check ran", False, str(e))
 
